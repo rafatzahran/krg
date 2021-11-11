@@ -26,7 +26,7 @@ public class Role {
     private Long version;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
+    @Column(length = 3000)
     private ERole name;
 
     @OneToMany(targetEntity = UserRole.class,

@@ -3,6 +3,8 @@ package com.example.krg.models;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,8 +25,9 @@ public class Unit {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 3000)
+    private EUnit name;
 
     @OneToMany(targetEntity = UserRole.class,
             mappedBy = "unitId",
@@ -37,12 +40,12 @@ public class Unit {
 
     }
 
-    public Unit(String name, Long version) {
+    public Unit(EUnit name, Long version) {
         this.name = name;
         this.version = version;
     }
 
-    public Unit(Long id, String name, Long version) {
+    public Unit(Long id, EUnit name, Long version) {
         this.id = id;
         this.name = name;
         this.version = version;
@@ -64,11 +67,11 @@ public class Unit {
         this.version = version;
     }
 
-    public String getName() {
+    public EUnit getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(EUnit name) {
         this.name = name;
     }
 }
