@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,7 +64,7 @@ public class UserController {
 
     @GetMapping("/valid/unit/{unit}/dateTime/{dateTime}")
     public ResponseEntity<?> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
-                                                                           @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
+                                                                  @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
         Map<String, String> errorResponse = new HashMap<>();
         if (unit == null) {
             errorResponse.put("message", "Unit must be specified.");
@@ -97,7 +98,7 @@ public class UserController {
     }
 
     @PostMapping("/new")
-    public ResponseEntity<?> createTutorial(@RequestBody User userPostRequest) {
+    public ResponseEntity<?> createUser(@RequestBody User userPostRequest) {
         Map<String, String> errorResponse = new HashMap<>();
         if (userPostRequest == null) {
             errorResponse.put("message", "User to create not defined in the body.");
@@ -114,6 +115,51 @@ public class UserController {
             User user = userRepository
                     .save(new User(userPostRequest.getName()));
             return new ResponseEntity<>(user, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/id/{userId}/version/{version}")
+    public ResponseEntity<?> updateUser(@PathVariable(required = true) Long userId,
+                                        @PathVariable(required = true) Long version,
+                                        @RequestBody User userPutRequest) {
+        Map<String, String> errorResponse = new HashMap<>();
+        if (userId == null) {
+            errorResponse.put("message", "User id must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (version == null) {
+            errorResponse.put("message", "Version must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (userPutRequest == null) {
+            errorResponse.put("message", "User to create not defined in the body.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            Optional<User> userExists = userRepository.findById(userId);
+            if (!userExists.isPresent()) {
+                errorResponse.put("message", String.format("User with id %d not found.", userId));
+                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            }
+            if (!userExists.get().getVersion().equals(version)) {
+                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
+                        version, userExists.get().getVersion()));
+                errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+            User updatedUser = userExists.get();
+            updatedUser.setName(userPutRequest.getName());
+            updatedUser.setVersion(userPutRequest.getVersion());
+            //Replace user (Assuming that (version and name) represent unique key in user table)
+            userRepository.delete(userExists.get());
+            User user = userRepository.save(updatedUser);
+            return new ResponseEntity<>(user, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -102,8 +102,6 @@ public class LoadTablesWithInitialValuesRunner implements ApplicationRunner {
                 new UserRole(1008L, 1L, 1L, 11L, 101L,
                         LocalDateTime.parse("2020-02-01 07:00:00", formatter), null),
                 new UserRole(1009L, 1L, 1L, 11L, 104L,
-                        LocalDateTime.parse("2020-02-01 07:00:00", formatter), null),
-                new UserRole(1010L, 1L, 1L, 11L, 204L,
                         LocalDateTime.parse("2020-02-01 07:00:00", formatter), null)
         );
 
