@@ -28,4 +28,8 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long>, UserR
     List<UserRole> findOnlyValidGivenDateTimeUserIdAndUnitId(@Param("user_id") Long userId,
                                                              @Param("unit_id") Long unitId,
                                                              @Param("datetime") LocalDateTime dateTime);
+
+    @Query(value  =
+            "SELECT * FROM user_role WHERE user_id = :user_id", nativeQuery = true)
+    List<UserRole> findAllByUserId(@Param("user_id") Long userId);
 }

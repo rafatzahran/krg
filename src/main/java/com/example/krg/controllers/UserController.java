@@ -14,6 +14,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +42,9 @@ public class UserController {
 
     @Autowired
     UnitRepository unitRepository;
+
+    @Autowired
+    UserRoleRepository userRoleRepository;
 
     @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers(@RequestParam(required = false) String username) {
@@ -159,6 +163,46 @@ public class UserController {
             updatedUser.setVersion(userPutRequest.getVersion());
             User user = userRepository.save(updatedUser);
             return new ResponseEntity<>(user, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/id/{userId}/version/{version}")
+    public ResponseEntity<?> deleteUser(@PathVariable(required = true) Long userId,
+                                        @PathVariable(required = true) Long version) {
+        Map<String, String> errorResponse = new HashMap<>();
+        if (userId == null) {
+            errorResponse.put("message", "User id must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (version == null) {
+            errorResponse.put("message", "Version must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            Optional<User> userExists = userRepository.findById(userId);
+            if (!userExists.isPresent()) {
+                errorResponse.put("message", String.format("User with id %d not found.", userId));
+                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            }
+            if (!userExists.get().getVersion().equals(version)) {
+                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
+                        version, userExists.get().getVersion()));
+                errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+            List<UserRole> userRoleExists = userRoleRepository.findAllByUserId(userId);
+            if (!userRoleExists.isEmpty()) {
+                errorResponse.put("message", String.format("There are user roles for user with id = (%d).",userId));
+                errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+           userRepository.delete(userExists.get());
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
