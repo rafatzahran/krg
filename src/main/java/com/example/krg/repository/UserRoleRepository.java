@@ -15,9 +15,4 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long>, UserR
     List<UserRole> findByUserId(Long userId);
 
     void insertUserRoleWithQuery(UserRole userRole);
-
-    @Query(value  =
-            "SELECT * FROM user_role " +
-                    " WHERE unit_id = :unit_id AND valid_to IS NULL or :datetime between valid_from and valid_to", nativeQuery = true)
-    List<UserRole> findAllValidUsersGivenUnitAndDateTime(@Param("unit_id") Long unitId, @Param("datetime") LocalDateTime dateTime);
 }
