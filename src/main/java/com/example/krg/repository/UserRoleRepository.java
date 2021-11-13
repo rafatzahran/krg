@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -19,4 +20,12 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long>, UserR
             "SELECT * FROM user_role " +
                     "WHERE user_id = :user_id AND unit_id = :unit_id ", nativeQuery = true)
     List<UserRole> findByUserIdAndUnitId(@Param("user_id") Long userId, @Param("unit_id") Long unitId);
+
+    @Query(value  =
+            "SELECT * FROM user_role " +
+                    "WHERE user_id = :user_id AND unit_id = :unit_id " +
+                    "AND (valid_to IS NULL OR :datetime between valid_from and valid_to)", nativeQuery = true)
+    List<UserRole> findOnlyValidGivenDateTimeUserIdAndUnitId(@Param("user_id") Long userId,
+                                                             @Param("unit_id") Long unitId,
+                                                             @Param("datetime") LocalDateTime dateTime);
 }

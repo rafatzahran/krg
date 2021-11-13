@@ -25,7 +25,7 @@ public class UnitController {
     @Autowired
     UnitRepository unitRepository;
 
-    @GetMapping("/units")
+    @GetMapping("/all")
     public ResponseEntity<List<Unit>> getAllUnits() {
         try {
             List<Unit> units = unitRepository.findAll();

@@ -43,7 +43,7 @@ public class UserRoleController {
     UserRoleRepository userRoleRepository;
 
     @GetMapping("/all/userid/{userId}/unitid/{unitId}")
-    public ResponseEntity<Object> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) Long userId,
+    public ResponseEntity<Object> getAllUserRolessGivenUserIdAndUnitId(@PathVariable(required = true) Long userId,
                                                                            @PathVariable(required = true) Long unitId) {
         Map<String, String> errorResponse = new HashMap<>();
         if (userId == null) {
@@ -84,4 +84,51 @@ public class UserRoleController {
         }
     }
 
+    @GetMapping("/valid/userid/{userId}/unitid/{unitId}/dateTime/{dateTime}")
+    public ResponseEntity<Object> getValidUserRolessGivenUserIdAndUnitIdAndDateTime(@PathVariable(required = true) Long userId,
+                                                                                    @PathVariable(required = true) Long unitId,
+                                                                                    @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
+        Map<String, String> errorResponse = new HashMap<>();
+        if (userId == null) {
+            errorResponse.put("message", "UserId must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (unitId == null) {
+            errorResponse.put("message", "UnitId must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (dateTime == null) {
+            errorResponse.put("message", "datetime must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        boolean userExists = userRepository.existsById(userId);
+        if (!userExists) {
+            errorResponse.put("message", String.format("User with id = %s not found.", userId));
+            errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
+
+        boolean unitExists = unitRepository.existsById(unitId);
+        if (!unitExists) {
+            errorResponse.put("message", String.format("Unit with id = %s not found.", unitId));
+            errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            List<UserRole> userRoles = userRoleRepository.findOnlyValidGivenDateTimeUserIdAndUnitId(userId, unitId, dateTime);
+
+            if (userRoles.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+
+            return new ResponseEntity<>(userRoles, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

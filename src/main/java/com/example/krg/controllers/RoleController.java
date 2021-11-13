@@ -27,7 +27,7 @@ public class RoleController {
     @Autowired
     RoleRepository roleRepository;
 
-    @GetMapping("/roles")
+    @GetMapping("/all")
     public ResponseEntity<List<Role>> getAllRoles() {
         try {
             List<Role> roles = roleRepository.findAll();

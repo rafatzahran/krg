@@ -37,7 +37,7 @@ public class UserController {
     @Autowired
     UnitRepository unitRepository;
 
-    @GetMapping("/users")
+    @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers(@RequestParam(required = false) String username) {
         try {
             List<User> users = new ArrayList<User>();
@@ -59,7 +59,7 @@ public class UserController {
 
     @GetMapping("/valid/unit/{unit}/dateTime/{dateTime}")
     public ResponseEntity<List<User>> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
-                                                                               @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime ) {
+                                                                           @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
         if (unit == null || dateTime == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
