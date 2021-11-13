@@ -12,16 +12,20 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.Table;
+import javax.persistence.TableGenerator;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(	name = "userRole")
+@Table(	name = "user_role")
 public class UserRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
+
+    @Column(name = "version", columnDefinition = "integer DEFAULT 1", nullable = false)
+    private Long version;
 
     @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
     @MapsId("userId")
@@ -33,10 +37,29 @@ public class UserRole {
     @JoinColumn(name="unitId", nullable=false)
     private Long unitId;
 
+
     @ManyToOne(targetEntity = Role.class, fetch = FetchType.LAZY)
     @MapsId("roleId")
     @JoinColumn(name="roleId", nullable=false)
     private Long roleId;
+
+
+/*
+    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
+    @MapsId("userId")
+    @JoinColumn(name="userId", nullable=false)
+    private Long userId;
+
+    @ManyToOne(targetEntity = Unit.class, fetch = FetchType.LAZY)
+    @MapsId("unitId")
+    @JoinColumn(name="unitId", nullable=false)
+    private Long unitId;
+
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Role.class)
+    @JoinColumn(name="role_id", referencedColumnName = "id")
+    private Long roleId;
+    */
+
 
     @CreatedDate
     @Column(name = "validFrom", columnDefinition = "TIMESTAMP", nullable = false)
@@ -56,8 +79,9 @@ public class UserRole {
         this.validTo = validTo;
     }
 
-    public UserRole(Long id, Long userId, Long unitId, Long roleId, LocalDateTime validFrom, LocalDateTime validTo) {
+    public UserRole(Long id,Long version, Long userId, Long unitId, Long roleId, LocalDateTime validFrom, LocalDateTime validTo) {
         this.id = id;
+        this.version = version;
         this.userId = userId;
         this.unitId = unitId;
         this.roleId = roleId;
@@ -71,6 +95,14 @@ public class UserRole {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public Long getUserId() {

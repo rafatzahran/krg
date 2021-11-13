@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.TableGenerator;
 import javax.persistence.UniqueConstraint;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,16 +18,18 @@ import java.util.List;
 @Entity
 @Table(	name = "unit", uniqueConstraints = {@UniqueConstraint(columnNames = {"version", "name"})})
 public class Unit {
+    @TableGenerator(name = "id_generator", table = "unit_id_gen", pkColumnName = "gen_name", valueColumnName = "gen_value",
+            pkColumnValue="task_gen", initialValue=10, allocationSize=10)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "id_generator")
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
-    @Column(name = "version", nullable = false)
+    @Column(name = "version", columnDefinition = "integer DEFAULT 1", nullable = false)
     private Long version;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 3000)
+    @Column(length = 191)
     private EUnit name;
 
     @OneToMany(targetEntity = UserRole.class,

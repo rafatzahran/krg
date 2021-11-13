@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.TableGenerator;
 import javax.persistence.UniqueConstraint;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,15 +16,17 @@ import java.util.List;
 @Entity
 @Table(	name = "user", uniqueConstraints = {@UniqueConstraint(columnNames = {"version", "name"})})
 public class User {
+    @TableGenerator(name = "id_generator", table = "user_id_gen", pkColumnName = "gen_name", valueColumnName = "gen_value",
+            pkColumnValue="task_gen", initialValue=0, allocationSize=10)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "id_generator")
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
-    @Column(name = "version", nullable = false)
+    @Column(name = "version", columnDefinition = "integer DEFAULT 1", nullable = false)
     private Long version;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", length = 191,  nullable = false)
     private String name;
 
     @OneToMany(targetEntity = UserRole.class,

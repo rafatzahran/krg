@@ -1,6 +1,14 @@
 # krg
  Demo project for KRG
 
+### Start the app
+
+```sh
+$ cd krg
+$ mvn package 
+$ java -jar target/demo-0.0.1-SNAPSHOT.jar
+```
+
 #### Configure Mysql: new user and db
 ```
 mysql -u root -p
@@ -37,11 +45,3 @@ We set the value to update value so that a table will be created in the database
 ### Create Spring Rest APIs Controller
 
 - UserController 
-
-### Start the app
-
-```sh
-$ cd krg
-$ mvn package 
-$ java -jar target/demo-0.0.1-SNAPSHOT.jar
-```
