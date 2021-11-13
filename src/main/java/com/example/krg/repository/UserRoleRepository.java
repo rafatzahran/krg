@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -15,4 +14,9 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long>, UserR
     List<UserRole> findByUserId(Long userId);
 
     void insertUserRoleWithQuery(UserRole userRole);
+
+    @Query(value  =
+            "SELECT * FROM user_role " +
+                    "WHERE user_id = :user_id AND unit_id = :unit_id ", nativeQuery = true)
+    List<UserRole> findByUserIdAndUnitId(@Param("user_id") Long userId, @Param("unit_id") Long unitId);
 }

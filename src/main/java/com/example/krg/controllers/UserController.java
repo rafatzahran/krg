@@ -57,7 +57,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/valid/users/unit/{unit}/dateTime/{dateTime}")
+    @GetMapping("/valid/unit/{unit}/dateTime/{dateTime}")
     public ResponseEntity<List<User>> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
                                                                                @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime ) {
         if (unit == null || dateTime == null) {
