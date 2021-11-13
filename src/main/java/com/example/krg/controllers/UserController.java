@@ -154,10 +154,9 @@ public class UserController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
             }
             User updatedUser = userExists.get();
+            updatedUser.setId(userExists.get().getId());
             updatedUser.setName(userPutRequest.getName());
             updatedUser.setVersion(userPutRequest.getVersion());
-            //Replace user (Assuming that (version and name) represent unique key in user table)
-            userRepository.delete(userExists.get());
             User user = userRepository.save(updatedUser);
             return new ResponseEntity<>(user, HttpStatus.OK);
         } catch (Exception e) {
