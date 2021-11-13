@@ -69,7 +69,7 @@ public class Role {
         this.name = name;
     }
 
-    public List<UserRole> getUserRoleList() {
+    /*public List<UserRole> getUserRoleList() {
         return userRoleList;
     }
 
@@ -79,5 +79,5 @@ public class Role {
 
     public void removeUserRole(UserRole userRole) {
         this.userRoleList.remove(userRole);
-    }
+    }*/
 }

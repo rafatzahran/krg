@@ -1,6 +1,8 @@
 package com.example.krg.controllers;
 
+import com.example.krg.models.Role;
 import com.example.krg.models.Unit;
+import com.example.krg.repository.RoleRepository;
 import com.example.krg.repository.UnitRepository;
 import com.example.krg.repository.UserRepository;
 import com.example.krg.repository.UserRoleRepository;
@@ -18,23 +20,23 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:8087")
 @RestController
-@RequestMapping("/api/unit")
-public class UnitController {
-    private static final Logger log = LoggerFactory.getLogger(UnitController.class);
+@RequestMapping("/api/role")
+public class RoleController {
+    private static final Logger log = LoggerFactory.getLogger(RoleController.class);
 
     @Autowired
-    UnitRepository unitRepository;
+    RoleRepository roleRepository;
 
-    @GetMapping("/units")
-    public ResponseEntity<List<Unit>> getAllUnits() {
+    @GetMapping("/roles")
+    public ResponseEntity<List<Role>> getAllRoles() {
         try {
-            List<Unit> units = unitRepository.findAll();
+            List<Role> roles = roleRepository.findAll();
 
-            if (units.isEmpty()) {
+            if (roles.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            return new ResponseEntity<>(units, HttpStatus.OK);
+            return new ResponseEntity<>(roles, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

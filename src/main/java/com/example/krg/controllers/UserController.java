@@ -35,9 +35,6 @@ public class UserController {
     UserRepository userRepository;
 
     @Autowired
-    UserRoleRepository userRoleRepository;
-
-    @Autowired
     UnitRepository unitRepository;
 
     @GetMapping("/users")
