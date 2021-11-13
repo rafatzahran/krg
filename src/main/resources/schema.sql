@@ -27,12 +27,12 @@ ALTER TABLE `role` AUTO_INCREMENT=101;
 
 CREATE TABLE IF NOT EXISTS `user_role` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `version` int(11) NOT NULL DEFAULT '1',
   `role_id` bigint(20) DEFAULT NULL,
   `unit_id` bigint(20) DEFAULT NULL,
   `user_id` bigint(20) DEFAULT NULL,
   `valid_from` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `valid_to` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   CONSTRAINT `FK859n2jvi8ivhui0rl0esws6o` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
   CONSTRAINT `FKa68196081fvovjhkek5m97n3y` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`),

@@ -16,13 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:8087")
@@ -58,17 +62,27 @@ public class UserController {
     }
 
     @GetMapping("/valid/unit/{unit}/dateTime/{dateTime}")
-    public ResponseEntity<List<User>> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
+    public ResponseEntity<?> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
                                                                            @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
-        if (unit == null || dateTime == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Map<String, String> errorResponse = new HashMap<>();
+        if (unit == null) {
+            errorResponse.put("message", "Unit must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (dateTime == null) {
+            errorResponse.put("message", "Datetime must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
         try {
             Optional<Unit> unitToUse = unitRepository.findByName(unit);
 
             if (!unitToUse.isPresent()) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                errorResponse.put("message", String.format("Unit %s not found.", unit.name()));
+                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
             }
             List<User> userRoleList = userRepository.findAllValidUsersGivenUnitAndDateTime(unitToUse.get().getId(), dateTime);
             if (userRoleList.isEmpty()) {
@@ -79,6 +93,29 @@ public class UserController {
         } catch (Exception e) {
             log.warn("Failed to get valid users: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/new")
+    public ResponseEntity<?> createTutorial(@RequestBody User userPostRequest) {
+        Map<String, String> errorResponse = new HashMap<>();
+        if (userPostRequest == null) {
+            errorResponse.put("message", "User to create not defined in the body.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            Boolean userExists = userRepository.existsByName(userPostRequest.getName());
+            if (userExists) {
+                errorResponse.put("message", String.format("User with name %s is already exists.", userPostRequest.getName()));
+                errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+            User user = userRepository
+                    .save(new User(userPostRequest.getName(), 1L));
+            return new ResponseEntity<>(user, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

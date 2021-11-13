@@ -32,6 +32,10 @@ public class User {
 
     }
 
+    public User(String name) {
+        this.name = name;
+    }
+
     public User(String name, Long version) {
         this.name = name;
         this.version = version;

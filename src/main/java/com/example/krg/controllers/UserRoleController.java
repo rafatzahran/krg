@@ -85,7 +85,7 @@ public class UserRoleController {
     }
 
     @GetMapping("/valid/userid/{userId}/unitid/{unitId}/dateTime/{dateTime}")
-    public ResponseEntity<Object> getValidUserRolessGivenUserIdAndUnitIdAndDateTime(@PathVariable(required = true) Long userId,
+    public ResponseEntity<?> getValidUserRolessGivenUserIdAndUnitIdAndDateTime(@PathVariable(required = true) Long userId,
                                                                                     @PathVariable(required = true) Long unitId,
                                                                                     @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
         Map<String, String> errorResponse = new HashMap<>();
