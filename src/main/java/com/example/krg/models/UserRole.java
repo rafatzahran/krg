@@ -2,6 +2,8 @@ package com.example.krg.models;
 
 import org.springframework.data.annotation.CreatedDate;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,7 +14,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.Table;
-import javax.persistence.TableGenerator;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,12 +28,12 @@ public class UserRole {
     @Column(name = "version", columnDefinition = "integer DEFAULT 1", nullable = false)
     private Long version;
 
-    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @MapsId("userId")
     @JoinColumn(name="userId", nullable=false)
     private Long userId;
 
-    @ManyToOne(targetEntity = Unit.class, fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = Unit.class, fetch = FetchType.EAGER)
     @MapsId("unitId")
     @JoinColumn(name="unitId", nullable=false)
     private Long unitId;
@@ -40,26 +41,8 @@ public class UserRole {
 
     @ManyToOne(targetEntity = Role.class, fetch = FetchType.LAZY)
     @MapsId("roleId")
-    @JoinColumn(name="roleId", nullable=false)
+    @JoinColumn(name = "roleId", referencedColumnName = "id", nullable=false)
     private Long roleId;
-
-
-/*
-    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
-    @MapsId("userId")
-    @JoinColumn(name="userId", nullable=false)
-    private Long userId;
-
-    @ManyToOne(targetEntity = Unit.class, fetch = FetchType.LAZY)
-    @MapsId("unitId")
-    @JoinColumn(name="unitId", nullable=false)
-    private Long unitId;
-
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Role.class)
-    @JoinColumn(name="role_id", referencedColumnName = "id")
-    private Long roleId;
-    */
-
 
     @CreatedDate
     @Column(name = "validFrom", columnDefinition = "TIMESTAMP", nullable = false)
@@ -105,26 +88,32 @@ public class UserRole {
         this.version = version;
     }
 
+    @Access(AccessType.PROPERTY)
     public Long getUserId() {
         return userId;
     }
 
+    @Access(AccessType.PROPERTY)
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
+    @Access(AccessType.PROPERTY)
     public Long getUnitId() {
         return unitId;
     }
 
+    @Access(AccessType.PROPERTY)
     public void setUnitId(Long unitId) {
         this.unitId = unitId;
     }
 
+    @Access(AccessType.PROPERTY)
     public Long getRoleId() {
         return roleId;
     }
 
+    @Access(AccessType.PROPERTY)
     public void setRoleId(Long roleId) {
         this.roleId = roleId;
     }

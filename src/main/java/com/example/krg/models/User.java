@@ -1,6 +1,5 @@
 package com.example.krg.models;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -29,11 +28,7 @@ public class User {
     @Column(name = "name", length = 191,  nullable = false)
     private String name;
 
-    @OneToMany(targetEntity = UserRole.class,
-            mappedBy = "userId",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(targetEntity = UserRole.class, mappedBy = "userId")
     private List<UserRole> userRoleList = new ArrayList<>();
 
     public User() {

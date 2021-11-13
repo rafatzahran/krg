@@ -102,15 +102,23 @@ public class LoadTablesWithInitialValuesRunner implements ApplicationRunner {
                 new UserRole(1008L, 1L, 1L, 11L, 101L,
                         LocalDateTime.parse("2020-02-01 07:00:00", formatter), null),
                 new UserRole(1009L, 1L, 1L, 11L, 104L,
+                        LocalDateTime.parse("2020-02-01 07:00:00", formatter), null),
+                new UserRole(1010L, 1L, 1L, 11L, 204L,
                         LocalDateTime.parse("2020-02-01 07:00:00", formatter), null)
         );
 
         try {
             for (UserRole userRole : userRoleList) {
-                repoUserRole.insertUserRoleWithQuery(userRole);
+                if (repoRole.existsById(userRole.getRoleId()) &&
+                        repoUnit.existsById(userRole.getUnitId()) &&
+                        repoUser.existsById(userRole.getUserId())) {
+                    repoUserRole.insertUserRoleWithQuery(userRole);
+                } else {
+                    log.warn("userRole with id = {} is not inserted.", userRole.getId());
+                }
             }
         } catch (Exception e) {
-            log.warn("Could not load initial values to userRole table. e={}", e.getMessage());
+            log.warn("Could not load initial values to userRole table. e = {}", e.getMessage());
         }
     }
 }

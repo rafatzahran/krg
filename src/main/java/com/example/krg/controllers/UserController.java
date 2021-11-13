@@ -1,7 +1,9 @@
 package com.example.krg.controllers;
 
 import com.example.krg.models.User;
+import com.example.krg.models.UserRole;
 import com.example.krg.repository.UserRepository;
+import com.example.krg.repository.UserRoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,11 @@ public class UserController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    UserRoleRepository userRoleRepository;
+
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllTutorials(@RequestParam(required = false) String username) {
+    public ResponseEntity<List<User>> getAllUsers(@RequestParam(required = false) String username) {
         try {
             List<User> users = new ArrayList<User>();
 
@@ -41,6 +46,23 @@ public class UserController {
 
             return new ResponseEntity<>(users, HttpStatus.OK);
         } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/valid/users")
+    public ResponseEntity<List<UserRole>> getAllValidUsersGivenUnitAndDateTime(@RequestParam(required = false) String username) {
+        try {
+            List<UserRole> userRoleList = userRoleRepository.findAllWithCreationDateTimeBefore();
+            //List<UserRole> userRoleList = userRoleRepository.findAll();
+
+            if (userRoleList.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+
+            return new ResponseEntity<>(userRoleList, HttpStatus.OK);
+        } catch (Exception e) {
+            log.warn("Failed to get valid users: {}", e.getMessage());
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
