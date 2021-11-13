@@ -6,10 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import java.util.Collections;
-import java.util.List;
 
 public class UserRoleCustomizedRepositoryImpl implements UserRoleCustomizedRepository {
     private static final Logger log = LoggerFactory.getLogger(UserRoleCustomizedRepositoryImpl.class);
@@ -32,16 +29,6 @@ public class UserRoleCustomizedRepositoryImpl implements UserRoleCustomizedRepos
                 .setParameter(++pos, userRole.getUnitId())
                 .setParameter(++pos, userRole.getUserId())
                 .executeUpdate();
-    }
-
-    @Override
-    public List<UserRole> findAllWithCreationDateTimeBefore() {
-        try {
-            return entityManager.createNativeQuery("SELECT ur.* FROM user_role ur where ur.valid_to is null or curdate() between valid_from and valid_to", UserRole.class).getResultList();
-        } catch (NoResultException e) {
-            log.warn("Failed to get valid userRole list. Ignore and continue. e = {}", e.getMessage());
-        }
-        return Collections.emptyList();
     }
 
 }

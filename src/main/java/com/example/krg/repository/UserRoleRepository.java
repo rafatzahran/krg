@@ -16,10 +16,8 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long>, UserR
 
     void insertUserRoleWithQuery(UserRole userRole);
 
-    //@Query("select a from Article a where a.creationDateTime <= :creationDateTime")
-    //List<UserRole> findAllWithCreationDateTimeBefore(
-      //      @Param("creationDateTime") LocalDateTime creationDateTime);
-
-    //@Query("SELECT ur FROM UserRole ur where valid_to is null or curdate() between valid_from and valid_to")
-    List<UserRole> findAllWithCreationDateTimeBefore();
+    @Query(value  =
+            "SELECT * FROM user_role " +
+                    " WHERE unit_id = :unit_id AND valid_to IS NULL or :datetime between valid_from and valid_to", nativeQuery = true)
+    List<UserRole> findAllValidUsersGivenUnitAndDateTime(@Param("unit_id") Long unitId, @Param("datetime") LocalDateTime dateTime);
 }
