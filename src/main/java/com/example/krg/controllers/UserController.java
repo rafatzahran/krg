@@ -112,7 +112,7 @@ public class UserController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
             }
             User user = userRepository
-                    .save(new User(userPostRequest.getName(), 1L));
+                    .save(new User(userPostRequest.getName()));
             return new ResponseEntity<>(user, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

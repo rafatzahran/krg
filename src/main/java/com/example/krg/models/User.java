@@ -34,6 +34,7 @@ public class User {
 
     public User(String name) {
         this.name = name;
+        this.version = 1L;
     }
 
     public User(String name, Long version) {
