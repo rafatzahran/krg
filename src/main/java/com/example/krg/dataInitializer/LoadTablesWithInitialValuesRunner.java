@@ -52,7 +52,7 @@ public class LoadTablesWithInitialValuesRunner implements ApplicationRunner {
         try {
             repoUser.saveAll(users);
         } catch (Exception e) {
-            log.warn("Could not load initial values to user table. e={}", e.getMessage());
+            log.warn("Could not load initial values to user table. e = {}", e.getMessage());
         }
 
         List<Unit> units = Arrays.asList(
@@ -64,7 +64,7 @@ public class LoadTablesWithInitialValuesRunner implements ApplicationRunner {
         try {
             repoUnit.saveAll(units);
         } catch (Exception e) {
-            log.warn("Could not load initial values to unit table. e={}", e.getMessage());
+            log.warn("Could not load initial values to unit table. e = {}", e.getMessage());
         }
 
         List<Role> roles = Arrays.asList(
@@ -77,7 +77,7 @@ public class LoadTablesWithInitialValuesRunner implements ApplicationRunner {
         try {
             repoRole.saveAll(roles);
         } catch (Exception e) {
-            log.warn("Could not load initial values to role table. e={}", e.getMessage());
+            log.warn("Could not load initial values to role table. e = {}", e.getMessage());
         }
 
 
@@ -109,13 +109,7 @@ public class LoadTablesWithInitialValuesRunner implements ApplicationRunner {
 
         try {
             for (UserRole userRole : userRoleList) {
-                if (repoRole.existsById(userRole.getRoleId()) &&
-                        repoUnit.existsById(userRole.getUnitId()) &&
-                        repoUser.existsById(userRole.getUserId())) {
-                    repoUserRole.insertUserRoleWithQuery(userRole);
-                } else {
-                    log.warn("userRole with id = {} is not inserted.", userRole.getId());
-                }
+                repoUserRole.insertUserRoleWithQuery(userRole);
             }
         } catch (Exception e) {
             log.warn("Could not load initial values to userRole table. e = {}", e.getMessage());
