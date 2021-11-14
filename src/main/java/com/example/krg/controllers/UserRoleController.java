@@ -1,6 +1,5 @@
 package com.example.krg.controllers;
 
-import com.example.krg.models.User;
 import com.example.krg.models.UserRole;
 import com.example.krg.repository.RoleRepository;
 import com.example.krg.repository.UnitRepository;
@@ -24,12 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:8087")
 @RestController
