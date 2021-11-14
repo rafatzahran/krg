@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -300,6 +301,41 @@ public class UserRoleController {
             errorResponse.put("message", String.format("Failed to create new user role. %s", e.getMessage()));
             errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.toString());
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/id/{userRoleId}/version/{version}")
+    public ResponseEntity<?> deleteUserRole(@PathVariable(required = true) Long userRoleId,
+                                            @PathVariable(required = true) Long version) {
+        Map<String, String> errorResponse = new HashMap<>();
+        if (userRoleId == null) {
+            errorResponse.put("message", "User role id must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        if (version == null) {
+            errorResponse.put("message", "Version must be specified.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            Optional<UserRole> userRoleFoundById = userRoleRepository.findById(userRoleId);
+            if (!userRoleFoundById.isPresent()) {
+                errorResponse.put("message", String.format("User role with id %d not found.", userRoleId));
+                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            }
+            if (!userRoleFoundById.get().getVersion().equals(version)) {
+                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
+                        version, userRoleFoundById.get().getVersion()));
+                errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+
+            userRoleRepository.delete(userRoleFoundById.get());
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

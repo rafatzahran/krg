@@ -183,25 +183,25 @@ public class UserController {
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
         try {
-            Optional<User> userExists = userRepository.findById(userId);
-            if (!userExists.isPresent()) {
+            Optional<User> userFoundById = userRepository.findById(userId);
+            if (!userFoundById.isPresent()) {
                 errorResponse.put("message", String.format("User with id %d not found.", userId));
                 errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
                 return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
             }
-            if (!userExists.get().getVersion().equals(version)) {
+            if (!userFoundById.get().getVersion().equals(version)) {
                 errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
-                        version, userExists.get().getVersion()));
+                        version, userFoundById.get().getVersion()));
                 errorResponse.put("status", HttpStatus.CONFLICT.toString());
                 return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
             }
-            List<UserRole> userRoleExists = userRoleRepository.findAllByUserId(userId);
-            if (!userRoleExists.isEmpty()) {
+            List<UserRole> userRoleListFoundById = userRoleRepository.findAllByUserId(userId);
+            if (!userRoleListFoundById.isEmpty()) {
                 errorResponse.put("message", String.format("There are user roles for user with id = (%d).",userId));
                 errorResponse.put("status", HttpStatus.CONFLICT.toString());
                 return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
             }
-           userRepository.delete(userExists.get());
+           userRepository.delete(userFoundById.get());
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
