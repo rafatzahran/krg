@@ -68,16 +68,4 @@ public class Role {
     public void setName(ERole name) {
         this.name = name;
     }
-
-    /*public List<UserRole> getUserRoleList() {
-        return userRoleList;
-    }
-
-    public void addUserRole(UserRole userRole) {
-        this.userRoleList.add(userRole);
-    }
-
-    public void removeUserRole(UserRole userRole) {
-        this.userRoleList.remove(userRole);
-    }*/
 }

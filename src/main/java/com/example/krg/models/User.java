@@ -68,4 +68,20 @@ public class User {
     public void setName(String name) {
         this.name = name;
     }
+
+    public List<UserRole> getUserRoleList() {
+        return userRoleList;
+    }
+
+    public void setUserRoleList(List<UserRole> userRoleList) {
+        this.userRoleList = userRoleList;
+    }
+
+    public void addUserRole(UserRole userRole) {
+        this.userRoleList.add(userRole);
+    }
+
+    public void removeUserRole(UserRole userRole) {
+        this.userRoleList.remove(userRole);
+    }
 }
