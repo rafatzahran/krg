@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(	name = "user_role")
 public class UserRole {
+    private final static Long defaultVersion = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,11 +55,12 @@ public class UserRole {
     public UserRole() {
     }
 
-    public UserRole(Long userId, Long unitId, Long roleId, LocalDateTime validFrom, LocalDateTime validTo) {
+    public UserRole(Long version, Long userId, Long unitId, Long roleId, LocalDateTime validFrom, LocalDateTime validTo) {
+        this.version = version == null ? defaultVersion : version;
         this.userId = userId;
         this.unitId = unitId;
         this.roleId = roleId;
-        this.validFrom = validFrom;
+        this.validFrom = version == null ? LocalDateTime.now() : validFrom;
         this.validTo = validTo;
     }
 

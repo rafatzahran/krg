@@ -14,6 +14,8 @@ import java.util.List;
 @Entity
 @Table(	name = "user", uniqueConstraints = {@UniqueConstraint(columnNames = {"version", "name"})})
 public class User {
+    private final static Long defaultVersion = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
@@ -32,14 +34,9 @@ public class User {
 
     }
 
-    public User(String name) {
+    public User(String name, final Long version) {
         this.name = name;
-        this.version = 1L;
-    }
-
-    public User(String name, Long version) {
-        this.name = name;
-        this.version = version;
+        this.version = version == null ? defaultVersion : version;
     }
 
     public User(Long id, String name, Long version) {
