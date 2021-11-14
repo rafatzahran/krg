@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -153,14 +154,14 @@ public class UserRoleController {
         }
 
         Long unitId = userRolePostRequest.getUnitId();
-        if (unitId == null || unitId < 1) {
+        if (unitId == null) {
             errorResponse.put("message", "Unit id defined in the body not valid.");
             errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
         Long roleId = userRolePostRequest.getRoleId();
-        if (roleId == null || roleId < 1) {
+        if (roleId == null) {
             errorResponse.put("message", "Role id defined in the body not valid.");
             errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -183,7 +184,6 @@ public class UserRoleController {
                             LocalDateTime existValidToToUse = Optional.ofNullable(existUserRole.getValidTo()).orElse(LocalDateTime.MAX);
                             LocalDateTime existValidFrom = existUserRole.getValidFrom();
                             LocalDateTime newValidToToUse = newValidTo.orElse(LocalDateTime.MAX);
-                            //return newValidFrom.isAfter(existValidToToUse) || newValidToToUse.isBefore(existValidFrom);
                             return newValidFrom.isBefore(existValidToToUse) && newValidToToUse.isAfter(existValidFrom);
                         })
                         .findFirst();
@@ -205,6 +205,96 @@ public class UserRoleController {
                             userRolePostRequest.getValidFrom(),
                             userRolePostRequest.getValidTo()
                             ));
+            return new ResponseEntity<>(userRole, HttpStatus.CREATED);
+        } catch (Exception e) {
+            errorResponse.put("message", String.format("Failed to create new user role. %s", e.getMessage()));
+            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/id/{userRoleId}/version/{version}")
+    public ResponseEntity<?> updateUserRole(@PathVariable(required = true) Long userRoleId,
+                                            @PathVariable(required = true) Long version,
+                                            @RequestBody UserRole userRolePutRequest) {
+        Map<String, String> errorResponse = new HashMap<>();
+
+        if (userRolePutRequest == null) {
+            errorResponse.put("message", "User role to update not defined in the body.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        if (userRoleId == null) {
+            errorResponse.put("message", "User role id can not be null.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        if (version == null) {
+            errorResponse.put("message", "Version can not be null.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        LocalDateTime newValidFrom = Optional.ofNullable(userRolePutRequest.getValidFrom()).orElse(LocalDateTime.now());
+        Optional<LocalDateTime> newValidTo = Optional.ofNullable(userRolePutRequest.getValidTo());
+        if (newValidTo.isPresent() && newValidTo.get().isBefore(newValidFrom)) {
+            errorResponse.put("message", "Specified valid to timestamp must be after the valid from timestamp.");
+            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            Optional<UserRole> userRoleFoundById = userRoleRepository.findById(userRoleId);
+            if (!userRoleFoundById.isPresent()) {
+                errorResponse.put("message", String.format("User role with id %d not found.", userRoleId));
+                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            }
+            if (!userRoleFoundById.get().getVersion().equals(version)) {
+                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
+                        version, userRoleFoundById.get().getVersion()));
+                errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+
+            Long userId = userRolePutRequest.getUserId();
+            Long unitId = userRolePutRequest.getUnitId();
+            Long roleId = userRolePutRequest.getRoleId();
+
+            UserRole updatedUser = userRoleFoundById.get();
+            updatedUser.setId(userRoleFoundById.get().getId());
+            updatedUser.setVersion(userRolePutRequest.getVersion());
+            updatedUser.setUserId(userId);
+            updatedUser.setUnitId(unitId);
+            updatedUser.setRoleId(roleId);
+            updatedUser.setValidFrom(newValidFrom);
+            updatedUser.setValidTo(newValidTo.orElse(null));
+
+            List<UserRole> userRoleListFoundByIds = userRoleRepository.findByUserIdUnitIdAndRoleId(userId, unitId, roleId);
+            if (!userRoleListFoundByIds.isEmpty()) {
+                Optional<UserRole> userRoleOverlappingWithTheNewOne = userRoleListFoundByIds.stream()
+                        .filter(existUserRole -> !userRoleId.equals(existUserRole.getId()))
+                        .filter(existUserRole -> {
+                            LocalDateTime existValidToToUse = Optional.ofNullable(existUserRole.getValidTo()).orElse(LocalDateTime.MAX);
+                            LocalDateTime existValidFrom = existUserRole.getValidFrom();
+                            LocalDateTime newValidToToUse = newValidTo.orElse(LocalDateTime.MAX);
+                            return newValidFrom.isBefore(existValidToToUse) && newValidToToUse.isAfter(existValidFrom);
+                        })
+                        .findFirst();
+                if (userRoleOverlappingWithTheNewOne.isPresent()) {
+                    errorResponse.put("message", String.format("User role with id %d has validation range that overlap the validation " +
+                                    "range of the user role with new info to update. At most one user role for a given combination of user id," +
+                                    " unit id and role id can be valid at any point in time.",
+                            userRoleOverlappingWithTheNewOne.get().getId()));
+                    errorResponse.put("status", HttpStatus.CONFLICT.toString());
+                    return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                }
+            }
+
+
+            UserRole userRole = userRoleRepository.save(updatedUser);
             return new ResponseEntity<>(userRole, HttpStatus.CREATED);
         } catch (Exception e) {
             errorResponse.put("message", String.format("Failed to create new user role. %s", e.getMessage()));

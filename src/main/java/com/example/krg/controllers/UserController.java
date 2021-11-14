@@ -145,20 +145,20 @@ public class UserController {
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
         try {
-            Optional<User> userExists = userRepository.findById(userId);
-            if (!userExists.isPresent()) {
+            Optional<User> userFoundById = userRepository.findById(userId);
+            if (!userFoundById.isPresent()) {
                 errorResponse.put("message", String.format("User with id %d not found.", userId));
                 errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
                 return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
             }
-            if (!userExists.get().getVersion().equals(version)) {
+            if (!userFoundById.get().getVersion().equals(version)) {
                 errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
-                        version, userExists.get().getVersion()));
+                        version, userFoundById.get().getVersion()));
                 errorResponse.put("status", HttpStatus.CONFLICT.toString());
                 return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
             }
-            User updatedUser = userExists.get();
-            updatedUser.setId(userExists.get().getId());
+            User updatedUser = userFoundById.get();
+            updatedUser.setId(userFoundById.get().getId());
             updatedUser.setName(userPutRequest.getName());
             updatedUser.setVersion(userPutRequest.getVersion());
             User user = userRepository.save(updatedUser);
