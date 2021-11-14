@@ -6,6 +6,7 @@ import com.example.krg.repository.RoleRepository;
 import com.example.krg.repository.UnitRepository;
 import com.example.krg.repository.UserRepository;
 import com.example.krg.repository.UserRoleRepository;
+import com.example.krg.util.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,32 +50,28 @@ public class UserRoleController {
     UserRoleRepository userRoleRepository;
 
     @GetMapping("/all/userid/{userId}/unitid/{unitId}")
-    public ResponseEntity<Object> getAllUserRolessGivenUserIdAndUnitId(@PathVariable(required = true) Long userId,
+    public ResponseEntity<?> getAllUserRolesGivenUserIdAndUnitId(@PathVariable(required = true) Long userId,
                                                                            @PathVariable(required = true) Long unitId) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (userId == null) {
-            errorResponse.put("message", "UserId must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "UserId must be specified.");
         }
         if (unitId == null) {
-            errorResponse.put("message", "UnitId must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "UnitId must be specified.");
         }
 
         boolean userExists = userRepository.existsById(userId);
         if (!userExists) {
-            errorResponse.put("message", String.format("User with id = %s not found.", userId));
-            errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                    String.format("User with id = %s not found.", userId));
         }
 
         boolean unitExists = unitRepository.existsById(unitId);
         if (!unitExists) {
-            errorResponse.put("message", String.format("Unit with id = %s not found.", unitId));
-            errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                    String.format("Unit with id = %s not found.", unitId));
         }
 
         try {
@@ -85,97 +83,82 @@ public class UserRoleController {
 
             return new ResponseEntity<>(userRoles, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get all users roles for given user id and  unit id: %s", e.getMessage()));
         }
     }
 
     @GetMapping("/valid/userid/{userId}/unitid/{unitId}/dateTime/{dateTime}")
-    public ResponseEntity<?> getValidUserRolesGivenUserIdAndUnitIdAndDateTime(@PathVariable(required = true) Long userId,
+    public ResponseEntity<?> getValidUserRolesGivenUserIdUnitIdAndDateTime(@PathVariable(required = true) Long userId,
                                                                                     @PathVariable(required = true) Long unitId,
                                                                                     @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (userId == null) {
-            errorResponse.put("message", "UserId must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "UserId must be specified.");
         }
         if (unitId == null) {
-            errorResponse.put("message", "UnitId must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "UnitId must be specified.");
         }
         if (dateTime == null) {
-            errorResponse.put("message", "datetime must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Datetime must be specified.");
         }
 
         boolean userExists = userRepository.existsById(userId);
         if (!userExists) {
-            errorResponse.put("message", String.format("User with id = %s not found.", userId));
-            errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                    String.format("User with id = %s not found.", userId));
         }
 
         boolean unitExists = unitRepository.existsById(unitId);
         if (!unitExists) {
-            errorResponse.put("message", String.format("Unit with id = %s not found.", unitId));
-            errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                    String.format("Unit with id = %s not found.", unitId));
         }
 
         try {
             List<UserRole> userRoles = userRoleRepository.findOnlyValidGivenDateTimeUserIdAndUnitId(userId, unitId, dateTime);
-
-            if (userRoles.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
             return new ResponseEntity<>(userRoles, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get valid user roles given user id, unit id and datetime. %s", e.getMessage()));
         }
     }
 
     @PostMapping("/new")
     public ResponseEntity<?> createUser(@RequestBody UserRole userRolePostRequest) {
-        Map<String, String> errorResponse = new HashMap<>();
 
         if (userRolePostRequest == null) {
-            errorResponse.put("message", "User role to create not defined in the body.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User role to create not defined in the body.");
         }
 
         Long userId = userRolePostRequest.getUserId();
         if (userId == null || userId < 1) {
-            errorResponse.put("message", "User id defined in the body not valid.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User id defined in the body not valid.");
         }
 
         Long unitId = userRolePostRequest.getUnitId();
         if (unitId == null) {
-            errorResponse.put("message", "Unit id defined in the body not valid.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Unit id defined in the body not valid.");
         }
 
         Long roleId = userRolePostRequest.getRoleId();
         if (roleId == null) {
-            errorResponse.put("message", "Role id defined in the body not valid.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Role id defined in the body not valid.");
         }
 
         LocalDateTime newValidFrom = Optional.ofNullable(userRolePostRequest.getValidFrom()).orElse(LocalDateTime.now());
         Optional<LocalDateTime> newValidTo = Optional.ofNullable(userRolePostRequest.getValidTo());
         if (newValidTo.isPresent() && newValidTo.get().isBefore(newValidFrom)) {
-            errorResponse.put("message", "Specified valid to timestamp must be after the valid from timestamp.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Specified valid to timestamp must be after the valid from timestamp.");
         }
-
 
         try {
             List<UserRole> userRoleListFoundByIds = userRoleRepository.findByUserIdUnitIdAndRoleId(userId, unitId, roleId);
@@ -189,12 +172,11 @@ public class UserRoleController {
                         })
                         .findFirst();
                 if (userRoleOverlappingWithTheNewOne.isPresent()) {
-                    errorResponse.put("message", String.format("User role with id %d has validation range that overlap the validation " +
-                            "range of the user role to create. At most one user role for a given combination of user id," +
-                            " unit id and role id can be valid at any point in time.",
-                            userRoleOverlappingWithTheNewOne.get().getId()));
-                    errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                    return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                    return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                            String.format("User role with id %d has validation range that overlap the validation " +
+                                            "range of the user role to create. At most one user role for a given combination of user id," +
+                                            " unit id and role id can be valid at any point in time.",
+                                    userRoleOverlappingWithTheNewOne.get().getId()));
                 }
             }
 
@@ -208,9 +190,8 @@ public class UserRoleController {
                             ));
             return new ResponseEntity<>(userRole, HttpStatus.CREATED);
         } catch (Exception e) {
-            errorResponse.put("message", String.format("Failed to create new user role. %s", e.getMessage()));
-            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to create new user role. %s", e.getMessage()));
         }
     }
 
@@ -218,124 +199,125 @@ public class UserRoleController {
     public ResponseEntity<?> updateUserRole(@PathVariable(required = true) Long userRoleId,
                                             @PathVariable(required = true) Long version,
                                             @RequestBody UserRole userRolePutRequest) {
-        Map<String, String> errorResponse = new HashMap<>();
 
         if (userRolePutRequest == null) {
-            errorResponse.put("message", "User role to update not defined in the body.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User role to update not defined in the body.");
         }
 
         if (userRoleId == null) {
-            errorResponse.put("message", "User role id can not be null.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User role id can not be null.");
         }
 
         if (version == null) {
-            errorResponse.put("message", "Version can not be null.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Version can not be null.");
         }
 
         LocalDateTime newValidFrom = Optional.ofNullable(userRolePutRequest.getValidFrom()).orElse(LocalDateTime.now());
         Optional<LocalDateTime> newValidTo = Optional.ofNullable(userRolePutRequest.getValidTo());
         if (newValidTo.isPresent() && newValidTo.get().isBefore(newValidFrom)) {
-            errorResponse.put("message", "Specified valid to timestamp must be after the valid from timestamp.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Specified valid to timestamp must be after the valid from timestamp.");
         }
 
         try {
             Optional<UserRole> userRoleFoundById = userRoleRepository.findById(userRoleId);
             if (!userRoleFoundById.isPresent()) {
-                errorResponse.put("message", String.format("User role with id %d not found.", userRoleId));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                        String.format("User role with id %d not found.", userRoleId));
             }
             if (!userRoleFoundById.get().getVersion().equals(version)) {
-                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
-                        version, userRoleFoundById.get().getVersion()));
-                errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                        String.format("Specified version(%d) doesn't match the current one (%d).",
+                                version, userRoleFoundById.get().getVersion()));
             }
 
             Long userId = userRolePutRequest.getUserId();
             Long unitId = userRolePutRequest.getUnitId();
             Long roleId = userRolePutRequest.getRoleId();
 
-            UserRole updatedUser = userRoleFoundById.get();
-            updatedUser.setId(userRoleFoundById.get().getId());
-            updatedUser.setVersion(userRolePutRequest.getVersion());
-            updatedUser.setUserId(userId);
-            updatedUser.setUnitId(unitId);
-            updatedUser.setRoleId(roleId);
-            updatedUser.setValidFrom(newValidFrom);
-            updatedUser.setValidTo(newValidTo.orElse(null));
+            UserRole userRoleToUpdate = buildUserRoleToUpdate(userRolePutRequest, newValidFrom, newValidTo,
+                    userRoleFoundById, userId, unitId, roleId);
 
             List<UserRole> userRoleListFoundByIds = userRoleRepository.findByUserIdUnitIdAndRoleId(userId, unitId, roleId);
             if (!userRoleListFoundByIds.isEmpty()) {
-                Optional<UserRole> userRoleOverlappingWithTheNewOne = userRoleListFoundByIds.stream()
-                        .filter(existUserRole -> !userRoleId.equals(existUserRole.getId()))
-                        .filter(existUserRole -> {
-                            LocalDateTime existValidToToUse = Optional.ofNullable(existUserRole.getValidTo()).orElse(LocalDateTime.MAX);
-                            LocalDateTime existValidFrom = existUserRole.getValidFrom();
-                            LocalDateTime newValidToToUse = newValidTo.orElse(LocalDateTime.MAX);
-                            return newValidFrom.isBefore(existValidToToUse) && newValidToToUse.isAfter(existValidFrom);
-                        })
-                        .findFirst();
+                Optional<UserRole> userRoleOverlappingWithTheNewOne = findUserRoleValidWithinRange(userRoleListFoundByIds,
+                        userRoleId, newValidFrom, newValidTo);
                 if (userRoleOverlappingWithTheNewOne.isPresent()) {
-                    errorResponse.put("message", String.format("User role with id %d has validation range that overlap the validation " +
-                                    "range of the user role with new info to update. At most one user role for a given combination of user id," +
-                                    " unit id and role id can be valid at any point in time.",
-                            userRoleOverlappingWithTheNewOne.get().getId()));
-                    errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                    return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                    return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                            String.format("User role with id %d has validation range that overlap the validation " +
+                                            "range of the user role with new info to update. At most one user role for a given combination of user id," +
+                                            " unit id and role id can be valid at any point in time.",
+                                    userRoleOverlappingWithTheNewOne.get().getId()));
                 }
             }
 
-
-            UserRole userRole = userRoleRepository.save(updatedUser);
+            UserRole userRole = userRoleRepository.save(userRoleToUpdate);
             return new ResponseEntity<>(userRole, HttpStatus.CREATED);
         } catch (Exception e) {
-            errorResponse.put("message", String.format("Failed to create new user role. %s", e.getMessage()));
-            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to update user role. %s", e.getMessage()));
         }
+    }
+
+    private UserRole buildUserRoleToUpdate(@RequestBody UserRole userRolePutRequest, LocalDateTime newValidFrom,
+                                           Optional<LocalDateTime> newValidTo, Optional<UserRole> userRoleFoundById,
+                                           Long userId, Long unitId, Long roleId) {
+        UserRole userRoleToUpdate = userRoleFoundById.get();
+        userRoleToUpdate.setId(userRoleFoundById.get().getId());
+        userRoleToUpdate.setVersion(userRolePutRequest.getVersion());
+        userRoleToUpdate.setUserId(userId);
+        userRoleToUpdate.setUnitId(unitId);
+        userRoleToUpdate.setRoleId(roleId);
+        userRoleToUpdate.setValidFrom(newValidFrom);
+        userRoleToUpdate.setValidTo(newValidTo.orElse(null));
+        return userRoleToUpdate;
+    }
+
+    private Optional<UserRole> findUserRoleValidWithinRange(List<UserRole> userRoleListFoundByIds, Long userRoleId, LocalDateTime newValidFrom,
+                                                            Optional<LocalDateTime> newValidTo) {
+        return userRoleListFoundByIds.stream()
+                .filter(existUserRole -> !userRoleId.equals(existUserRole.getId()))//Skip the actual user role
+                .filter(existUserRole -> {
+                    LocalDateTime existValidToToUse = Optional.ofNullable(existUserRole.getValidTo()).orElse(LocalDateTime.MAX);
+                    LocalDateTime existValidFrom = existUserRole.getValidFrom();
+                    LocalDateTime newValidToToUse = newValidTo.orElse(LocalDateTime.MAX);
+                    return newValidFrom.isBefore(existValidToToUse) && newValidToToUse.isAfter(existValidFrom);
+                })
+                .findFirst();
     }
 
     @DeleteMapping("/id/{userRoleId}/version/{version}")
     public ResponseEntity<?> deleteUserRole(@PathVariable(required = true) Long userRoleId,
                                             @PathVariable(required = true) Long version) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (userRoleId == null) {
-            errorResponse.put("message", "User role id must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User role id must be specified.");
         }
         if (version == null) {
-            errorResponse.put("message", "Version must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Version must be specified.");
         }
         try {
             Optional<UserRole> userRoleFoundById = userRoleRepository.findById(userRoleId);
             if (!userRoleFoundById.isPresent()) {
-                errorResponse.put("message", String.format("User role with id %d not found.", userRoleId));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                        String.format("User role with id %d not found.", userRoleId));
             }
             if (!userRoleFoundById.get().getVersion().equals(version)) {
-                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
-                        version, userRoleFoundById.get().getVersion()));
-                errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                        String.format("Specified version(%d) doesn't match the current one (%d).",
+                                version, userRoleFoundById.get().getVersion()));
             }
 
             userRoleRepository.delete(userRoleFoundById.get());
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to delete user role: %s", e.getMessage()));
         }
     }
 }

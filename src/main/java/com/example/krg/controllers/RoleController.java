@@ -6,6 +6,7 @@ import com.example.krg.repository.RoleRepository;
 import com.example.krg.repository.UnitRepository;
 import com.example.krg.repository.UserRepository;
 import com.example.krg.repository.UserRoleRepository;
+import com.example.krg.util.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +29,13 @@ public class RoleController {
     RoleRepository roleRepository;
 
     @GetMapping("/all")
-    public ResponseEntity<List<Role>> getAllRoles() {
+    public ResponseEntity<?> getAllRoles() {
         try {
             List<Role> roles = roleRepository.findAll();
-
-            if (roles.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
             return new ResponseEntity<>(roles, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get all roles: %s", e.getMessage()));
         }
     }
 

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `user_role` (
   `valid_from` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `valid_to` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UKonk66jvi8ivypd0281yt6dirs` (`version`,`user_id`,`unit_id`,`role_id`,`valid_from`,`valid_to`),
   CONSTRAINT `FK859n2jvi8ivhui0rl0esws6o` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
   CONSTRAINT `FKa68196081fvovjhkek5m97n3y` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`),
   CONSTRAINT `FKpt7dh4wokvni2d0281yt8snug` FOREIGN KEY (`unit_id`) REFERENCES `unit` (`id`)

@@ -4,6 +4,7 @@ import com.example.krg.models.Unit;
 import com.example.krg.repository.UnitRepository;
 import com.example.krg.repository.UserRepository;
 import com.example.krg.repository.UserRoleRepository;
+import com.example.krg.util.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,17 +27,13 @@ public class UnitController {
     UnitRepository unitRepository;
 
     @GetMapping("/all")
-    public ResponseEntity<List<Unit>> getAllUnits() {
+    public ResponseEntity<?> getAllUnits() {
         try {
             List<Unit> units = unitRepository.findAll();
-
-            if (units.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
             return new ResponseEntity<>(units, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get all units: %s", e.getMessage()));
         }
     }
 

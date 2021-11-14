@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,7 +54,7 @@ public class UserController {
     UserRoleRepository userRoleRepository;
 
     @GetMapping("/all")
-    public ResponseEntity<List<UserDTO>> getAllUsers(@RequestParam(required = false) String username) {
+    public ResponseEntity<?> getAllUsers(@RequestParam(required = false) String username) {
         try {
             List<User> users = new ArrayList<User>();
 
@@ -65,39 +64,38 @@ public class UserController {
                 userRepository.findByName(username).forEach(users::add);
 
             if (users.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(users, HttpStatus.NO_CONTENT);
             }
+
             List<UserDTO> userDTOList = users.stream()
                     .map(Utility::mapUserToDTO)
                     .collect(Collectors.toList());
             return new ResponseEntity<>(userDTOList, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get all users: %s", e.getMessage()));
         }
     }
 
     @GetMapping("/valid/unit/{unit}/dateTime/{dateTime}")
     public ResponseEntity<?> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
                                                                   @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (unit == null) {
-            errorResponse.put("message", "Unit must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Unit must be specified.");
         }
         if (dateTime == null) {
-            errorResponse.put("message", "Datetime must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Datetime must be specified.");
         }
 
         try {
             Optional<Unit> unitToUse = unitRepository.findByName(unit);
 
             if (!unitToUse.isPresent()) {
-                errorResponse.put("message", String.format("Unit %s not found.", unit.name()));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                        String.format("Unit %s not found.", unit.name()));
             }
             List<User> users = userRepository.findAllValidUsersGivenUnitAndDateTime(unitToUse.get().getId(), dateTime);
             if (users.isEmpty()) {
@@ -108,32 +106,31 @@ public class UserController {
                     .collect(Collectors.toList());
             return new ResponseEntity<>(userDTOList, HttpStatus.OK);
         } catch (Exception e) {
-            log.warn("Failed to get valid users: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get all valid users given unit and datetime: %s", e.getMessage()));
         }
     }
 
     @PostMapping("/new")
     public ResponseEntity<?> createUser(@RequestBody User userPostRequest) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (userPostRequest == null) {
-            errorResponse.put("message", "User to create not defined in the body.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User to create not defined in the body.");
         }
         try {
             Boolean userExists = userRepository.existsByName(userPostRequest.getName());
             if (userExists) {
-                errorResponse.put("message", String.format("User with name %s is already exists.", userPostRequest.getName()));
-                errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                        String.format("User with name %s is already exists.", userPostRequest.getName()));
             }
             User user = userRepository
                     .save(new User(userPostRequest.getName(), null));
             UserDTO userDTO = mapUserToDTO(user);
             return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to create user: %s", e.getMessage()));
         }
     }
 
@@ -141,34 +138,29 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable(required = true) Long userId,
                                         @PathVariable(required = true) Long version,
                                         @RequestBody User userPutRequest) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (userId == null) {
-            errorResponse.put("message", "User id must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User id must be specified.");
         }
         if (version == null) {
-            errorResponse.put("message", "Version must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Version must be specified.");
         }
         if (userPutRequest == null) {
-            errorResponse.put("message", "User to create not defined in the body.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User to create not defined in the body.");
         }
         try {
             Optional<User> userFoundById = userRepository.findById(userId);
             if (!userFoundById.isPresent()) {
-                errorResponse.put("message", String.format("User with id %d not found.", userId));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                        String.format("User with id %d not found.", userId));
             }
             if (!userFoundById.get().getVersion().equals(version)) {
-                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
-                        version, userFoundById.get().getVersion()));
-                errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                        String.format("Specified version(%d) doesn't match the current one (%d).",
+                                version, userFoundById.get().getVersion()));
             }
             User updatedUser = userFoundById.get();
             updatedUser.setId(userFoundById.get().getId());
@@ -178,47 +170,44 @@ public class UserController {
             UserDTO userDTO = mapUserToDTO(user);
             return new ResponseEntity<>(userDTO, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to update user with id= %d and version = %d: %s", userId, version, e.getMessage()));
         }
     }
 
     @DeleteMapping("/id/{userId}/version/{version}")
     public ResponseEntity<?> deleteUser(@PathVariable(required = true) Long userId,
                                         @PathVariable(required = true) Long version) {
-        Map<String, String> errorResponse = new HashMap<>();
+
         if (userId == null) {
-            errorResponse.put("message", "User id must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "User id must be specified.");
         }
         if (version == null) {
-            errorResponse.put("message", "Version must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST,
+                    "Version must be specified.");
         }
         try {
             Optional<User> userFoundById = userRepository.findById(userId);
             if (!userFoundById.isPresent()) {
-                errorResponse.put("message", String.format("User with id %d not found.", userId));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND,
+                        String.format("User with id %d not found.", userId));
             }
             if (!userFoundById.get().getVersion().equals(version)) {
-                errorResponse.put("message", String.format("Specified version(%d) doesn't match the current one (%d).",
-                        version, userFoundById.get().getVersion()));
-                errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                        String.format("Specified version(%d) doesn't match the current one (%d).",
+                                version, userFoundById.get().getVersion()));
             }
             List<UserRole> userRoleListFoundById = userRoleRepository.findAllByUserId(userId);
             if (!userRoleListFoundById.isEmpty()) {
-                errorResponse.put("message", String.format("There are user roles for user with id = (%d).",userId));
-                errorResponse.put("status", HttpStatus.CONFLICT.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.CONFLICT,
+                        String.format("There are user roles for user with id = (%d).",userId));
             }
            userRepository.delete(userFoundById.get());
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to delete user with id= %d and version = %d: %s", userId, version, e.getMessage()));
         }
     }
 
@@ -226,20 +215,15 @@ public class UserController {
     @ResponseBody
     public ResponseEntity<?> getAllUsersWithAtLeastOneRoleGivenUnitId(@PathVariable(required = true) Long unitId,
                                                                       @RequestHeader Map<String, String> headers) {
-        Map<String, String> errorResponse = new HashMap<>();
         if (unitId == null) {
-            errorResponse.put("message", "Unit id must be specified.");
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.BAD_REQUEST, "Unit id must be specified.");
         }
 
         try {
             Optional<Unit> unitToUse = unitRepository.findById(unitId);
 
             if (!unitToUse.isPresent()) {
-                errorResponse.put("message", String.format("Unit with id %d not found.", unitId));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+                return Utility.getResponseEntityWithCustomMsg(HttpStatus.NOT_FOUND, "Specified unit id not found.");
             }
             List<User> users = userRepository.getAllUsersWithAtLeastOneRoleGivenUnitId(unitToUse.get().getId());
             if (users.isEmpty()) {
@@ -262,9 +246,11 @@ public class UserController {
                     .contentType(mediaType)
                     .body(usersFiltered);
         } catch (Exception e) {
-            log.warn("Failed to get users for given unit id: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return Utility.getResponseEntityWithCustomMsg(HttpStatus.INTERNAL_SERVER_ERROR,
+                    String.format("Failed to get users for given unit id: %s", e.getMessage()));
         }
     }
+
+
 
 }
