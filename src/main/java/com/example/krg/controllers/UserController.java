@@ -77,6 +77,18 @@ public class UserController {
         }
     }
 
+    /**
+     * List all users <p>with at least one valid user role at a given unit at a given time</p>
+     *
+     * @param unit of the user role.
+     * @param dateTime user role's validation datetime.
+     *
+     * @return ResponseEntity with list of {@link UserDTO}
+     *
+     * @throws 400 if path parameter is null.
+     * @throws 404 if specified unit not found in unit table.
+     * @throws 500 if failed occur while trying to fetch data.
+     */
     @GetMapping("/valid/unit/{unit}/dateTime/{dateTime}")
     public ResponseEntity<?> getAllValidUsersGivenUnitAndDateTime(@PathVariable(required = true) EUnit unit,
                                                                   @PathVariable(required = true) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime dateTime) {
@@ -99,7 +111,7 @@ public class UserController {
             }
             List<User> users = userRepository.findAllValidUsersGivenUnitAndDateTime(unitToUse.get().getId(), dateTime);
             if (users.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(users,HttpStatus.OK);
             }
             List<UserDTO> userDTOList = users.stream()
                     .map(Utility::mapUserToDTO)
